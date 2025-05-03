@@ -18,9 +18,42 @@ Deploid is your AI Buddy for Quick and Easy Deployment! This Python-based tool h
 
 ## Installation
 
-### Quick Installation (Recommended)
+### Standalone Executables (Recommended)
 
-You can install Deploid with a single command:
+Download a standalone executable for your platform:
+
+#### Linux
+
+```bash
+# Download
+curl -sSL https://github.com/yourusername/deploid/releases/latest/download/deploid-linux-x86_64 -o deploid
+
+# Make executable and move to PATH
+chmod +x deploid
+sudo mv deploid /usr/local/bin/
+```
+
+#### macOS
+
+```bash
+# Download (Intel Macs)
+curl -sSL https://github.com/yourusername/deploid/releases/latest/download/deploid-darwin-x86_64 -o deploid
+
+# Download (Apple Silicon Macs)
+curl -sSL https://github.com/yourusername/deploid/releases/latest/download/deploid-darwin-arm64 -o deploid
+
+# Make executable and move to PATH
+chmod +x deploid
+sudo mv deploid /usr/local/bin/
+```
+
+#### Windows
+
+Download the executable from the [releases page](https://github.com/yourusername/deploid/releases/latest), rename it to `deploid.exe`, and add it to your PATH.
+
+### Script Installation
+
+You can also install Deploid with a single command:
 
 ```bash
 curl -sSL https://github.com/yourusername/deploid/releases/latest/download/install.sh | bash
@@ -41,9 +74,8 @@ curl -sSL https://github.com/yourusername/deploid/releases/download/v1.0.0/insta
 This will:
 
 - Download Deploid
-- Set up a virtual environment
-- Install all dependencies
-- Create an executable in your PATH
+- Set up the executable
+- Add it to your PATH
 
 After installation, you can run Deploid from anywhere by typing:
 

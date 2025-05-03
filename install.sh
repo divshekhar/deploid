@@ -124,7 +124,7 @@ download_deploid() {
     # Extract the archive
     if ! command -v unzip &> /dev/null; then
         print_warning "unzip is not installed. Attempting to install unzip..."
-        
+
         if command -v apt-get &> /dev/null; then
             sudo apt-get update
             sudo apt-get install -y unzip
@@ -144,9 +144,37 @@ download_deploid() {
 
     # Try extracting again
     if command -v unzip &> /dev/null; then
-        unzip deploid.zip
-        mv "$EXTRACT_DIR"/* .
-        rm -rf "$EXTRACT_DIR"
+        # Extract the zip file
+        unzip -q deploid.zip
+
+        # Check if the expected directory exists
+        if [ -d "$EXTRACT_DIR" ]; then
+            print_instruction "Found expected directory structure: $EXTRACT_DIR"
+            mv "$EXTRACT_DIR"/* .
+            rm -rf "$EXTRACT_DIR"
+        else
+            # If the expected directory doesn't exist, check what we got
+            print_instruction "Directory $EXTRACT_DIR not found. Checking extracted contents..."
+            ls -la
+
+            # Check if we have the necessary files directly in the current directory
+            if [ -f "deploid.py" ] || [ -f "main.py" ]; then
+                print_instruction "Found Deploid files in the root of the archive. Using them directly."
+                # No need to move files, they're already in the current directory
+            else
+                # Try to find any directories that might contain our files
+                DIRS=$(find . -maxdepth 1 -type d -not -path "." -not -path "./.git*")
+                if [ -n "$DIRS" ]; then
+                    # Use the first directory found
+                    FIRST_DIR=$(echo "$DIRS" | head -n 1)
+                    print_instruction "Using directory: $FIRST_DIR"
+                    mv "$FIRST_DIR"/* .
+                    rm -rf "$FIRST_DIR"
+                else
+                    print_warning "Could not find Deploid files in the archive. Installation may be incomplete."
+                fi
+            fi
+        fi
     else
         print_error "unzip is not installed. Please install unzip and try again."
         exit 1
@@ -165,24 +193,59 @@ download_deploid() {
     print_instruction "Deploid $VERSION downloaded and extracted to $INSTALL_DIR"
 }
 
-# Set up virtual environment
-setup_venv() {
-    print_message "Setting up virtual environment..."
+# Set up executable
+setup_executable() {
+    print_message "Setting up Deploid executable..."
 
     cd "$INSTALL_DIR"
 
-    # Create virtual environment if it doesn't exist
-    if [ ! -d "venv" ]; then
-        python3 -m venv venv
+    # Check if we already have the executable
+    if [ -f "deploid" ]; then
+        print_instruction "Deploid executable found"
+        chmod +x deploid
+    else
+        # Check if we have a pre-built executable for this platform
+        PLATFORM=$(uname -s | tr '[:upper:]' '[:lower:]')
+        ARCH=$(uname -m)
+
+        if [ -f "bin/$PLATFORM-$ARCH/deploid" ]; then
+            print_instruction "Found pre-built executable for $PLATFORM-$ARCH"
+            mkdir -p bin
+            cp "bin/$PLATFORM-$ARCH/deploid" .
+            chmod +x deploid
+        else
+            print_warning "No pre-built executable found for $PLATFORM-$ARCH"
+            print_instruction "Attempting to create executable from source..."
+
+            # Check if PyInstaller is installed
+            if ! command -v pip3 &> /dev/null; then
+                print_error "pip3 is not installed. Please install pip3 and try again."
+                exit 1
+            fi
+
+            # Install PyInstaller if not already installed
+            if ! python3 -c "import PyInstaller" &> /dev/null; then
+                print_instruction "Installing PyInstaller..."
+                pip3 install PyInstaller
+            fi
+
+            # Create executable
+            print_instruction "Creating executable with PyInstaller..."
+            python3 -m PyInstaller --onefile deploid.py
+
+            # Move executable to the right location
+            if [ -f "dist/deploid" ]; then
+                mv dist/deploid .
+                chmod +x deploid
+                rm -rf build dist *.spec
+            else
+                print_error "Failed to create executable. Please check the logs for errors."
+                exit 1
+            fi
+        fi
     fi
 
-    # Activate virtual environment and install dependencies
-    source venv/bin/activate
-    pip install --upgrade pip
-    pip install -r requirements.txt
-    deactivate
-
-    print_instruction "Virtual environment set up successfully"
+    print_instruction "Deploid executable set up successfully"
 }
 
 # Create executable wrapper
@@ -226,14 +289,8 @@ create_wrapper() {
     WRAPPER_CONTENT="#!/bin/bash
 # Deploid wrapper script
 
-# Get the directory of this script
-SCRIPT_DIR=\"\$(cd \"\$(dirname \"\${BASH_SOURCE[0]}\")\" && pwd)\"
-
-# Activate virtual environment and run deploid
-cd \"$INSTALL_DIR\"
-source venv/bin/activate
-python deploid.py \"\$@\"
-deactivate
+# Run the Deploid executable
+\"$INSTALL_DIR/deploid\" \"\$@\"
 "
 
     if [ "$SUDO_REQUIRED" = true ]; then
@@ -302,7 +359,7 @@ main() {
 
     # Download and install
     download_deploid
-    setup_venv
+    setup_executable
     create_wrapper
 
     print_message "Deploid has been successfully installed!"

@@ -25,12 +25,76 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pyinstaller
+
+      - name: Build executables
+        run: |
+          # Build executable for Linux
+          echo "Building executable for Linux..."
+          pyinstaller --onefile deploid.py
+          mkdir -p bin/linux-x86_64
+          cp dist/deploid bin/linux-x86_64/
+
+          # Note: For a real-world application, you would use GitHub Actions matrix
+          # to build for multiple platforms (Windows, macOS, etc.)
+          # For this example, we'll just create a placeholder for other platforms
+          mkdir -p bin/darwin-x86_64
+          mkdir -p bin/darwin-arm64
+          mkdir -p bin/windows-x86_64
+
+          # Create placeholder executables for other platforms
+          # In a real scenario, you would build these on their respective platforms
+          echo "#!/bin/bash" > bin/darwin-x86_64/deploid
+          echo "echo 'This is a placeholder. Please download the correct version for macOS Intel.'" >> bin/darwin-x86_64/deploid
+          chmod +x bin/darwin-x86_64/deploid
+
+          echo "#!/bin/bash" > bin/darwin-arm64/deploid
+          echo "echo 'This is a placeholder. Please download the correct version for macOS Apple Silicon.'" >> bin/darwin-arm64/deploid
+          chmod +x bin/darwin-arm64/deploid
+
+          echo "#!/bin/bash" > bin/windows-x86_64/deploid
+          echo "echo 'This is a placeholder. Please download the correct version for Windows.'" >> bin/windows-x86_64/deploid
+          chmod +x bin/windows-x86_64/deploid
+
+          # For a real application, you would also create Windows .exe files
 
       - name: Create distribution package
         run: |
           mkdir -p dist
-          # Create a zip file of the entire repository
-          zip -r dist/deploid-${{ github.event.release.tag_name }}.zip . -x "*.git*" "dist/*" ".github/*"
+          # Create a temporary directory with the correct structure
+          mkdir -p /tmp/deploid-${{ github.event.release.tag_name }}
+
+          # Copy all files to the temporary directory
+          cp -r * /tmp/deploid-${{ github.event.release.tag_name }}/ 2>/dev/null || true
+          cp -r .* /tmp/deploid-${{ github.event.release.tag_name }}/ 2>/dev/null || true
+
+          # Remove unnecessary files
+          rm -rf /tmp/deploid-${{ github.event.release.tag_name }}/.git* 2>/dev/null || true
+          rm -rf /tmp/deploid-${{ github.event.release.tag_name }}/dist 2>/dev/null || true
+          rm -rf /tmp/deploid-${{ github.event.release.tag_name }}/.github 2>/dev/null || true
+
+          # Create a zip file with the correct directory structure
+          cd /tmp
+          zip -r $GITHUB_WORKSPACE/dist/deploid-${{ github.event.release.tag_name }}.zip deploid-${{ github.event.release.tag_name }}
+          cd $GITHUB_WORKSPACE
+
+          # Debug: Show the contents of the zip file
+          echo "Contents of the zip file:"
+          unzip -l dist/deploid-${{ github.event.release.tag_name }}.zip
+
+          # Create standalone executable packages for different platforms
+          cp bin/linux-x86_64/deploid dist/deploid-linux-x86_64
+          chmod +x dist/deploid-linux-x86_64
+
+          # In a real scenario, you would have actual executables for these platforms
+          cp bin/darwin-x86_64/deploid dist/deploid-darwin-x86_64
+          chmod +x dist/deploid-darwin-x86_64
+
+          cp bin/darwin-arm64/deploid dist/deploid-darwin-arm64
+          chmod +x dist/deploid-darwin-arm64
+
+          cp bin/windows-x86_64/deploid dist/deploid-windows-x86_64
+          chmod +x dist/deploid-windows-x86_64
 
       - name: Update installer script
         run: |
@@ -90,6 +154,10 @@ jobs:
             dist/install.sh
             dist/install-${{ github.event.release.tag_name }}.sh
             dist/index.html
+            dist/deploid-linux-x86_64
+            dist/deploid-darwin-x86_64
+            dist/deploid-darwin-arm64
+            dist/deploid-windows-x86_64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

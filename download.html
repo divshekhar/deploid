@@ -91,10 +91,40 @@ bash install.sh</pre>
     <a href="https://github.com/divshekhar/deploid/releases/latest/download/install.sh" class="download-btn">Download
         Installer Script</a>
 
-    <p>Or download a specific version:</p>
+    <h2>Standalone Executables</h2>
+    <p>You can also download standalone executables for your platform:</p>
+
+    <h3>Linux</h3>
+    <a href="https://github.com/divshekhar/deploid/releases/latest/download/deploid-linux-x86_64"
+        class="download-btn">Download for Linux (x86_64)</a>
+    <p>After downloading, make it executable and move it to a directory in your PATH:</p>
+    <pre>chmod +x deploid-linux-x86_64
+sudo mv deploid-linux-x86_64 /usr/local/bin/deploid</pre>
+
+    <h3>macOS</h3>
+    <a href="https://github.com/divshekhar/deploid/releases/latest/download/deploid-darwin-x86_64"
+        class="download-btn">Download for macOS (Intel)</a>
+    <a href="https://github.com/divshekhar/deploid/releases/latest/download/deploid-darwin-arm64"
+        class="download-btn">Download for macOS (Apple Silicon)</a>
+    <p>After downloading, make it executable and move it to a directory in your PATH:</p>
+    <pre>chmod +x deploid-darwin-*
+sudo mv deploid-darwin-* /usr/local/bin/deploid</pre>
+
+    <h3>Windows</h3>
+    <a href="https://github.com/divshekhar/deploid/releases/latest/download/deploid-windows-x86_64"
+        class="download-btn">Download for Windows</a>
+    <p>After downloading, rename it to deploid.exe and add it to your PATH.</p>
+
+    <p>Or browse all versions:</p>
     <a href="https://github.com/divshekhar/deploid/releases" class="download-btn">View All Releases</a>
 
     <h2>System Requirements</h2>
+    <h3>For Standalone Executables</h3>
+    <ul>
+        <li>No additional requirements - just download and run!</li>
+    </ul>
+
+    <h3>For Script Installation</h3>
     <ul>
         <li>Python 3.6 or higher</li>
         <li>pip (Python package manager)</li>
