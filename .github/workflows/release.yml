@@ -6,6 +6,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   build:
@@ -62,6 +64,24 @@ jobs:
           # Add version information
           sed -i "s|<h1>Download Deploid</h1>|<h1>Download Deploid ${VERSION}</h1>|g" dist/index.html
 
+          # Create a pages directory for GitHub Pages
+          mkdir -p pages
+          cp dist/index.html pages/
+
+          # Create a versions directory to list all versions
+          mkdir -p pages/versions
+          echo "# Deploid Versions" > pages/versions/index.md
+          echo "" >> pages/versions/index.md
+          echo "## Latest Release: ${VERSION}" >> pages/versions/index.md
+          echo "" >> pages/versions/index.md
+          echo "### Installation" >> pages/versions/index.md
+          echo '```bash' >> pages/versions/index.md
+          echo "curl -sSL https://github.com/${REPO}/releases/download/${VERSION}/install.sh | bash" >> pages/versions/index.md
+          echo '```' >> pages/versions/index.md
+
+          # Save version info for GitHub Pages
+          echo "${VERSION}" > pages/latest-version.txt
+
       - name: Upload release assets
         uses: softprops/action-gh-release@v1
         with:
@@ -72,3 +92,34 @@ jobs:
             dist/index.html
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: github-pages
+          path: pages/
+
+  deploy-pages:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download GitHub Pages artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: github-pages
+          path: pages
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: 'pages'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
