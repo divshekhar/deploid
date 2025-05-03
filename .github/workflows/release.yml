@@ -29,9 +29,26 @@ jobs:
 
       - name: Build executables
         run: |
-          # Build executable for Linux
+          # Install all dependencies explicitly to ensure they're properly included
+          pip install readchar
+
+          # Create a hook file to ensure readchar is properly included
+          mkdir -p hooks
+          cat > hooks/hook-readchar.py << 'EOF'
+          from PyInstaller.utils.hooks import collect_all
+
+          datas, binaries, hiddenimports = collect_all('readchar')
+          EOF
+
+          # Build executable for Linux with additional options
           echo "Building executable for Linux..."
-          pyinstaller --onefile deploid.py
+          pyinstaller --onefile \
+            --additional-hooks-dir=hooks \
+            --hidden-import=readchar \
+            --hidden-import=importlib.metadata \
+            --collect-all readchar \
+            deploid.py
+
           mkdir -p bin/linux-x86_64
           cp dist/deploid bin/linux-x86_64/
 

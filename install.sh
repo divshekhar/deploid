@@ -223,15 +223,26 @@ setup_executable() {
                 exit 1
             fi
 
-            # Install PyInstaller if not already installed
-            if ! python3 -c "import PyInstaller" &> /dev/null; then
-                print_instruction "Installing PyInstaller..."
-                pip3 install PyInstaller
-            fi
+            # Install PyInstaller and required dependencies
+            print_instruction "Installing PyInstaller and dependencies..."
+            pip3 install PyInstaller readchar
 
-            # Create executable
+            # Create a hook file to ensure readchar is properly included
+            mkdir -p hooks
+            cat > hooks/hook-readchar.py << 'EOF'
+from PyInstaller.utils.hooks import collect_all
+
+datas, binaries, hiddenimports = collect_all('readchar')
+EOF
+
+            # Create executable with all necessary options
             print_instruction "Creating executable with PyInstaller..."
-            python3 -m PyInstaller --onefile deploid.py
+            python3 -m PyInstaller --onefile \
+              --additional-hooks-dir=hooks \
+              --hidden-import=readchar \
+              --hidden-import=importlib.metadata \
+              --collect-all readchar \
+              deploid.py
 
             # Move executable to the right location
             if [ -f "dist/deploid" ]; then
