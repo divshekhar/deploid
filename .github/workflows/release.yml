@@ -102,23 +102,57 @@ jobs:
   deploy-pages:
     needs: build
     runs-on: ubuntu-latest
+    # Add concurrency to ensure only one deployment happens at a time
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # Add a step to create a deployment branch
+      - name: Checkout code for pages
+        uses: actions/checkout@v3
+        with:
+          ref: main # Use your default branch here
+
       - name: Download GitHub Pages artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: github-pages
           path: pages
 
+      # Optional: Create or update gh-pages branch
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Deploy to gh-pages branch
+        run: |
+          # Create gh-pages branch if it doesn't exist
+          git checkout -B gh-pages
+
+          # Remove existing files but keep .git directory
+          find . -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} \;
+
+          # Copy pages content to root
+          cp -r pages/* .
+          rm -rf pages
+
+          # Commit and push changes
+          git add .
+          git commit -m "Deploy to GitHub Pages for release ${{ github.event.release.tag_name }}"
+          git push -f origin gh-pages
+
+      # Continue with standard GitHub Pages deployment
       - name: Setup Pages
         uses: actions/configure-pages@v3
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: 'pages'
+          path: '.' # Use current directory which now contains the pages content
 
       - name: Deploy to GitHub Pages
         id: deployment
