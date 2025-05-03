@@ -96,7 +96,7 @@ jobs:
       - name: Upload GitHub Pages artifact
         uses: actions/upload-artifact@v4
         with:
-          name: github-pages
+          name: pages-content
           path: pages/
 
   deploy-pages:
@@ -106,6 +106,13 @@ jobs:
     concurrency:
       group: pages
       cancel-in-progress: false
+    # Note: This job creates and updates the gh-pages branch
+    # To use this for GitHub Pages:
+    # 1. Go to your repository settings
+    # 2. Navigate to Pages section
+    # 3. Select "Deploy from a branch" under Source
+    # 4. Select "gh-pages" branch and "/ (root)" folder
+    # 5. Click Save
     steps:
       # Add a step to create a deployment branch
       - name: Checkout code for pages
@@ -116,7 +123,7 @@ jobs:
       - name: Download GitHub Pages artifact
         uses: actions/download-artifact@v4
         with:
-          name: github-pages
+          name: pages-content
           path: pages
 
       # Optional: Create or update gh-pages branch
@@ -198,30 +205,10 @@ jobs:
           git commit -m "Deploy to GitHub Pages for release ${{ github.event.release.tag_name }}"
           git push -f origin gh-pages
 
-  # Create a separate job for GitHub Pages deployment
-  deploy-github-pages:
-    needs: deploy-pages
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: gh-pages
+          echo "✅ Deployment to gh-pages branch complete!"
+          echo "🌐 Your site will be available at: https://${{ github.repository_owner }}.github.io/$(echo '${{ github.repository }}' | cut -d'/' -f2)/"
+          echo "⚠️ Note: It may take a few minutes for the changes to be visible."
+          echo "📋 To configure GitHub Pages, go to your repository settings and select the gh-pages branch as the source."
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.' # Use current directory which contains the gh-pages content
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+# The gh-pages branch will be used for GitHub Pages
+# No need for a separate GitHub Pages deployment job since we're using branch-based deployment
