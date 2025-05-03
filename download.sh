@@ -15,9 +15,9 @@ echo -e "${GREEN}Downloading Deploid installer...${NC}"
 
 # Determine download URL based on version
 if [ "$VERSION" = "latest" ]; then
-    DOWNLOAD_URL="https://github.com/yourusername/deploid/releases/latest/download/install.sh"
+    DOWNLOAD_URL="https://github.com/divshekhar/deploid/releases/latest/download/install.sh"
 else
-    DOWNLOAD_URL="https://github.com/yourusername/deploid/releases/download/${VERSION}/install.sh"
+    DOWNLOAD_URL="https://github.com/divshekhar/deploid/releases/download/${VERSION}/install.sh"
 fi
 
 echo -e "${BLUE}Download URL: ${DOWNLOAD_URL}${NC}"

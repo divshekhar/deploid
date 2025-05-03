@@ -122,6 +122,27 @@ download_deploid() {
     fi
 
     # Extract the archive
+    if ! command -v unzip &> /dev/null; then
+        print_warning "unzip is not installed. Attempting to install unzip..."
+        
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y unzip
+        elif command -v dnf &> /dev/null; then
+            sudo dnf install -y unzip
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y unzip
+        elif command -v pacman &> /dev/null; then
+            sudo pacman -S --noconfirm unzip
+        elif command -v brew &> /dev/null; then
+            brew install unzip
+        else
+            print_error "Could not install unzip. Please install unzip manually and try again."
+            exit 1
+        fi
+    fi
+
+    # Try extracting again
     if command -v unzip &> /dev/null; then
         unzip deploid.zip
         mv "$EXTRACT_DIR"/* .
