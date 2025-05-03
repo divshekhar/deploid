@@ -18,6 +18,58 @@ Deploid is your AI Buddy for Quick and Easy Deployment! This Python-based tool h
 
 ## Installation
 
+### Quick Installation (Recommended)
+
+You can install Deploid with a single command:
+
+```bash
+curl -sSL https://github.com/yourusername/deploid/releases/latest/download/install.sh | bash
+```
+
+Or if you prefer wget:
+
+```bash
+wget -qO- https://github.com/yourusername/deploid/releases/latest/download/install.sh | bash
+```
+
+To install a specific version (e.g., v1.0.0):
+
+```bash
+curl -sSL https://github.com/yourusername/deploid/releases/download/v1.0.0/install.sh | bash -s -- --version v1.0.0
+```
+
+This will:
+
+- Download Deploid
+- Set up a virtual environment
+- Install all dependencies
+- Create an executable in your PATH
+
+After installation, you can run Deploid from anywhere by typing:
+
+```bash
+deploid
+```
+
+#### Installation Options
+
+The installer supports several options:
+
+- `--version` or `-v`: Specify the version to install (default: latest)
+- `--directory` or `-d`: Specify the installation directory
+- `--yes` or `-y`: Automatic yes to prompts
+- `--help` or `-h`: Show help message
+
+Example with options:
+
+```bash
+bash install.sh --version v1.0.0 --directory ~/deploid-custom --yes
+```
+
+### Manual Installation
+
+If you prefer to install manually:
+
 1. Clone this repository:
 
    ```bash
