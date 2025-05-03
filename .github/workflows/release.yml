@@ -1,0 +1,71 @@
+name: Release Deploid
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Create distribution package
+        run: |
+          mkdir -p dist
+          # Create a zip file of the entire repository
+          zip -r dist/deploid-${{ github.event.release.tag_name }}.zip . -x "*.git*" "dist/*" ".github/*"
+
+      - name: Update installer script
+        run: |
+          # Get the release version
+          VERSION="${{ github.event.release.tag_name }}"
+          REPO="${{ github.repository }}"
+
+          # Create a copy of the installer script
+          cp install.sh dist/install.sh
+
+          # Update the download URL in the installer script
+          sed -i "s|https://github.com/yourusername/deploid/archive/main.zip|https://github.com/${REPO}/releases/download/${VERSION}/deploid-${VERSION}.zip|g" dist/install.sh
+          sed -i "s|deploid-main|deploid-${VERSION}|g" dist/install.sh
+
+          # Create a version-specific installer
+          cp dist/install.sh dist/install-${VERSION}.sh
+
+      - name: Update download page
+        run: |
+          # Get the release version
+          VERSION="${{ github.event.release.tag_name }}"
+          REPO="${{ github.repository }}"
+
+          # Create a copy of the download page
+          cp download.html dist/index.html
+
+          # Update URLs in the download page
+          sed -i "s|https://example.com/deploid/install.sh|https://github.com/${REPO}/releases/download/${VERSION}/install.sh|g" dist/index.html
+          sed -i "s|https://github.com/yourusername/deploid|https://github.com/${REPO}|g" dist/index.html
+
+          # Add version information
+          sed -i "s|<h1>Download Deploid</h1>|<h1>Download Deploid ${VERSION}</h1>|g" dist/index.html
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/deploid-${{ github.event.release.tag_name }}.zip
+            dist/install.sh
+            dist/install-${{ github.event.release.tag_name }}.sh
+            dist/index.html
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
